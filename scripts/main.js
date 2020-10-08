@@ -25,7 +25,7 @@ document.getElementById("ok").addEventListener("click", (ev => {
 				An2 += smo.stats[key] / numberOfSteps;																			
             }else if ((key[2] == 1)){
 				An2 += smo.stats[key] / numberOfSteps;	
-			}else if(key[3] == 1 && key[2] == 1){
+			}else if(key[3] == 1){
 				An3 += smo.stats[key] / numberOfSteps;					
 			}
         }
