@@ -10,37 +10,42 @@ document.getElementById("ok").addEventListener("click", (ev => {
         smo.processNextStep();
     }
     let result = "Результаты: <br/>";
-    let meanQueue = 0;
     let meanSystem = 0;
     let A = 0;
     console.log(smo.stats);
     console.log(smo.stats.length);
+	let An2 = 0;
+	let An3 = 0;
     for (let key in smo.stats) {
         if (smo.stats[key] !== 1) {
             result += `P${key} = ${smo.stats[key] / numberOfSteps}<br/>`;
-            meanQueue += smo.stats[key] / numberOfSteps * Number(key[2]);
-            meanSystem += smo.stats[key] / numberOfSteps * (Number(key[1]) + Number(key[2]) + Number(key[3]));
-            if (key[3] == 1) {
-                A += smo.stats[key] / numberOfSteps;
-            }
+            meanSystem += smo.stats[key] / numberOfSteps * (Number(key[1]) + Number(key[2]) + Number(key[3]));																					
+            if ((key[3] == 1 && key[2] == 1)) {
+                An3 += smo.stats[key] / numberOfSteps;
+				An2 += smo.stats[key] / numberOfSteps;																			
+            }else if ((key[2] == 1)){
+				An2 += smo.stats[key] / numberOfSteps;	
+			}else if(key[3] == 1 && key[2] == 1){
+				An3 += smo.stats[key] / numberOfSteps;					
+			}
         }
     }
-    A *= (1 - pi2);
+    An2 *= (1 - pi2);
+	An3 *= (1 - pi3);
+	A = An2 + An3;
     let pBlock = smo.blocked / numberOfSteps;
     let lambda = 0.5 * (1 - pBlock);
-    let Q = A / lambda;
-    let pRej = 1 - Q;
+    let pRej = smo.rejected / numberOfSteps;
+    let Q = 1 - pRej;
     let meanTimeC1 = 1 / (1 - pi1);
     let meanTimeC2 = 1 / (1 - pi2);
-    let meanQueueTime = meanQueue / A;
-    let meanTimeInSystem = meanTimeC1 + meanTimeC2 + meanQueueTime;
+    let meanTimeC3 = 1 / (1 - pi3);
+    let meanTimeInSystem = meanTimeC1 + meanTimeC2 + meanTimeC3;
     result += `Вероятность отказа: ${pRej}<br/>`;
     result += `Вероятность блокировки: ${pBlock}<br/>`;
-    result += `Средняя длина очереди: ${meanQueue}<br/>`;
     result += `Среднее количество заявок в системе: ${meanSystem}<br/>`;
     result += `Относительная пропускная способность: ${Q}<br/>`;
     result += `Абсолютная пропускная способность: ${A}<br/>`;
-    result += `Среднее время заявок в очереди: ${meanQueueTime}<br/>`;
     result += `Среднее время заявок в системе: ${meanTimeInSystem}<br/>`;
     document.getElementById("result").innerHTML = result;
 }));
