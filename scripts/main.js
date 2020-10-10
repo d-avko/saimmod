@@ -88,10 +88,11 @@ class SMO {
         this.channel1 = 0;
         this.channel2 = 0;
 		this.channel3 = 0;
-        this.source = 0;
+        this.source = 1;
         this.rejected = 0;
         this.blocked = 0;
         this.stats = {};
+        this.timeInSystem = [0];
         this.saveStats();
         this.generator = lemenGenerator();
     }
@@ -137,20 +138,6 @@ class SMO {
                 this.blocked++;
             }
         }
-
-        // if((1 - this.p > this.generator.next().value) && this.source && !this.channel1){
-        //     this.source = 1;
-        //     this.channel1 = 1;
-        // }
-
-        // if((1 - this.p > this.generator.next().value) && this.source && this.channel1){
-        //     this.source = 0;
-        //     this.blocked++;
-        // }
-
-        //01 - 01
-
-        
 
         this.saveStats();
     }
