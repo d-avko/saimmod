@@ -9,6 +9,7 @@ document.getElementById("ok").addEventListener("click", (ev => {
     for (let i = 0; i < numberOfSteps; i++) {
         smo.processNextStep();
     }
+    smo.endProcessing();
     let result = "Результаты: <br/>";
     let meanSystem = 0;
     let A = 0;
@@ -40,14 +41,24 @@ document.getElementById("ok").addEventListener("click", (ev => {
     let meanTimeC1 = 1 / (1 - pi1);
     let meanTimeC2 = 1 / (1 - pi2);
     let meanTimeC3 = 1 / (1 - pi3);
+
+    let Wc = smo.timeInSystemRes.reduce((prev, curr, index) => {
+        return curr + prev;
+    }, 0) / smo.timeInSystemRes.length;
+
+    if(isNaN(Wc)){
+        Wc = smo.timeInSystemRes.length;
+    }
+
     let meanTimeInSystem = meanTimeC1 + meanTimeC2 + meanTimeC3;
     result += `Вероятность отказа: ${pRej}<br/>`;
     result += `Вероятность блокировки: ${pBlock}<br/>`;
     result += `Среднее количество заявок в системе: ${meanSystem}<br/>`;
     result += `Относительная пропускная способность: ${Q}<br/>`;
     result += `Абсолютная пропускная способность: ${A}<br/>`;
-    result += `Среднее время заявок в системе: ${meanTimeInSystem}<br/>`;
+    result += `Среднее время заявок в системе: ${Wc}<br/>`;
     document.getElementById("result").innerHTML = result;
+    console.log(smo.timeInSystemRes);
 }));
 
 function* lemenGenerator() {
@@ -92,7 +103,8 @@ class SMO {
         this.rejected = 0;
         this.blocked = 0;
         this.stats = {};
-        this.timeInSystem = [0];
+        this.timeInSystem = [];
+        this.timeInSystemRes = [];
         this.saveStats();
         this.generator = lemenGenerator();
     }
@@ -100,15 +112,18 @@ class SMO {
     processNextStep() {
         if(this.channel3 && (1 - this.pi3 > this.generator.next().value)){
             this.channel3 = 0;
+            this.timeInSystemRes.push(this.timeInSystem.shift());
         }
 
         if(this.channel2 &&  (1 - this.pi2 > this.generator.next().value)){
             this.channel2 = 0;
+            this.timeInSystemRes.push(this.timeInSystem.shift());
         }
 
         if(this.channel1 && (1 - this.pi1 > this.generator.next().value)){
             if(this.channel2 && this.channel3){
                 this.channel1 = 0;
+                this.timeInSystemRes.push(this.timeInSystem.pop());
                 this.rejected++;
             }else if(!this.channel2){
                 this.channel1 = 0;
@@ -126,6 +141,7 @@ class SMO {
                     this.blocked++;
                 }else{
                     this.channel1 = 1;
+                    this.timeInSystem.push(0);
                 }
             }else{
                 
@@ -134,12 +150,21 @@ class SMO {
             if(!this.channel1){
                 this.source = 1;
                 this.channel1 = 1;  
+                this.timeInSystem.push(0);
             }else{
                 this.blocked++;
             }
         }
 
+        for(let i = 0; i < this.timeInSystem.length; ++i){
+            this.timeInSystem[i]++;
+        }
+
         this.saveStats();
+    }
+
+    endProcessing(){
+        this.timeInSystemRes = this.timeInSystem.concat(this.timeInSystemRes);
     }
 
     saveStats() {
