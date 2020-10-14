@@ -38,23 +38,25 @@ document.getElementById("ok").addEventListener("click", (ev => {
     let lambda = 0.5 * (1 - pBlock);
     let pRej = smo.rejected / numberOfSteps;
     let Q = A / lambda;
-    let meanTimeC1 = 1 / (1 - pi1);
-    let meanTimeC2 = 1 / (1 - pi2);
-    let meanTimeC3 = 1 / (1 - pi3);
 
     let Wc = smo.timeInSystemRes.reduce((prev, curr, index) => {
         return curr + prev;
     }, 0) / smo.timeInSystemRes.length;
 
     if(isNaN(Wc)){
-        Wc = smo.timeInSystemRes.length;
+        Wc = smo.timeInSystem.length;
     }
 
-    let meanTimeInSystem = meanTimeC1 + meanTimeC2 + meanTimeC3;
+    let q = (numberOfSteps - smo.timeInSystem.length - smo.rejected) / (numberOfSteps);
+
+    if(smo.timeInSystemRes.length == 0 && smo.timeInSystem.length == 0){
+        q = 0;
+    }
+
     result += `Вероятность отказа: ${pRej}<br/>`;
     result += `Вероятность блокировки: ${pBlock}<br/>`;
     result += `Среднее количество заявок в системе: ${meanSystem}<br/>`;
-    result += `Относительная пропускная способность: ${Q}<br/>`;
+    result += `Относительная пропускная способность: ${q}<br/>`;
     result += `Абсолютная пропускная способность: ${A}<br/>`;
     result += `Среднее время заявок в системе: ${Wc}<br/>`;
     document.getElementById("result").innerHTML = result;
