@@ -49,8 +49,16 @@ document.getElementById("ok").addEventListener("click", (ev => {
     let pRej = smo.rejected / smo.timeInSystemRes.length;
 
     let Wc = smo.timeInSystemRes.reduce((prev, curr, index) => {
-        return curr + prev;
-    }, 0) / smo.timeInSystemRes.length;
+        if(prev == undefined || prev.time == undefined || curr == undefined || curr.time == undefined){
+            console.log(index);
+        }
+
+        return {time: curr.time + prev.time};
+    }, {time: 0}).time / smo.timeInSystemRes.length;
+
+    let x = smo.timeInSystemRes.sort((a,b) => a.time - b.time);
+
+    console.log(x[smo.timeInSystemRes.length / 2])
 
     if(isNaN(Wc)){
         Wc = smo.timeInSystem.length;
@@ -72,7 +80,7 @@ document.getElementById("ok").addEventListener("click", (ev => {
     result += `Kch2: ${kCh2}<br/>`;
     result += `Kch3: ${kCh3}<br/>`;
     document.getElementById("result").innerHTML = result;
-    console.log(smo.timeInSystemRes);
+    console.log(smo);
 }));
 
 function* lemenGenerator() {
@@ -125,24 +133,44 @@ class SMO {
 
     processNextStep() {
         if(this.channel3 && (1 - this.pi3 > this.generator.next().value)){
+            let searchArray = this.timeInSystem.map(x => x.cameTo);
+            let idx = searchArray.lastIndexOf('n3');
+
             this.channel3 = 0;
-            this.timeInSystemRes.push(this.timeInSystem.shift());
+            this.timeInSystemRes.push(this.timeInSystem.splice(idx,1)[0]);
         }
 
         if(this.channel2 &&  (1 - this.pi2 > this.generator.next().value)){
+            let searchArray = this.timeInSystem.map(x => x.cameTo);
+            let idx = searchArray.lastIndexOf('n2');
+
             this.channel2 = 0;
-            this.timeInSystemRes.push(this.timeInSystem.shift());
+            this.timeInSystemRes.push(this.timeInSystem.splice(idx,1)[0]);
         }
 
         if(this.channel1 && (1 - this.pi1 > this.generator.next().value)){
             if(this.channel2 && this.channel3){
                 this.channel1 = 0;
-                this.timeInSystemRes.push(this.timeInSystem.pop());
+
+                let searchArray = this.timeInSystem.map(x => x.cameTo);
+                let idx = searchArray.lastIndexOf('n1');
+
+                this.timeInSystemRes.push(this.timeInSystem.splice(idx, 1)[0]);
                 this.rejected++;
             }else if(!this.channel2){
+                let searchArray = this.timeInSystem.map(x => x.cameFrom);
+                let idx = searchArray.lastIndexOf('s');
+                this.timeInSystem[idx].cameFrom = 'n1';
+                this.timeInSystem[idx].cameTo = 'n2';
+
                 this.channel1 = 0;
                 this.channel2 = 1;
             }else if (!this.channel3){
+                let searchArray = this.timeInSystem.map(x => x.cameFrom);
+                let idx = searchArray.lastIndexOf('s');
+                this.timeInSystem[idx].cameFrom = 'n1';
+                this.timeInSystem[idx].cameTo = 'n3';
+                
                 this.channel1 = 0;
                 this.channel3 = 1;
             }
@@ -155,7 +183,7 @@ class SMO {
                     this.blocked++;
                 }else{
                     this.channel1 = 1;
-                    this.timeInSystem.push(-1);
+                    this.timeInSystem.push({time: -1, cameFrom: 's', cameTo: 'n1'});
                 }
             }else{
                 
@@ -164,14 +192,14 @@ class SMO {
             if(!this.channel1){
                 this.source = 1;
                 this.channel1 = 1;  
-                this.timeInSystem.push(0);
+                this.timeInSystem.push({time: 0, cameFrom: 's', cameTo: 'n1'});
             }else{
                 this.blocked++;
             }
         }
 
         for(let i = 0; i < this.timeInSystem.length; ++i){
-            this.timeInSystem[i]++;
+            this.timeInSystem[i].time++;
         }
 
         this.saveStats();
