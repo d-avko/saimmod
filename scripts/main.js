@@ -16,28 +16,37 @@ document.getElementById("ok").addEventListener("click", (ev => {
     console.log(smo.stats);
     console.log(smo.stats.length);
 	let An2 = 0;
-	let An3 = 0;
+    let An3 = 0;
+    let kCh1 = 0;
+    let kCh2 = 0;
+    let kCh3 = 0;
     for (let key in smo.stats) {
         if (smo.stats[key] !== 1) {
             result += `P${key} = ${smo.stats[key] / numberOfSteps}<br/>`;
             meanSystem += smo.stats[key] / numberOfSteps * (Number(key[1]) + Number(key[2]) + Number(key[3]));																					
             if ((key[3] == 1 && key[2] == 1)) {
                 An3 += smo.stats[key] / numberOfSteps;
-				An2 += smo.stats[key] / numberOfSteps;																			
+                An2 += smo.stats[key] / numberOfSteps;
+                kCh2 += smo.stats[key] / numberOfSteps;
+                kCh3 += smo.stats[key] / numberOfSteps;																		
             }else if ((key[2] == 1)){
-				An2 += smo.stats[key] / numberOfSteps;	
+                An2 += smo.stats[key] / numberOfSteps;	
+                kCh2 += smo.stats[key] / numberOfSteps
 			}else if(key[3] == 1){
-				An3 += smo.stats[key] / numberOfSteps;					
-			}
+                An3 += smo.stats[key] / numberOfSteps;	
+                kCh3 += smo.stats[key] / numberOfSteps;		
+            }
+            
+            if(key[1] == 1){
+                kCh1 += smo.stats[key] / numberOfSteps;
+            }
         }
     }
     An2 *= (1 - pi2);
 	An3 *= (1 - pi3);
 	A = An2 + An3;
     let pBlock = smo.blocked / numberOfSteps;
-    let lambda = 0.5 * (1 - pBlock);
-    let pRej = smo.rejected / numberOfSteps;
-    let Q = A / lambda;
+    let pRej = smo.rejected / smo.timeInSystemRes.length;
 
     let Wc = smo.timeInSystemRes.reduce((prev, curr, index) => {
         return curr + prev;
@@ -47,7 +56,7 @@ document.getElementById("ok").addEventListener("click", (ev => {
         Wc = smo.timeInSystem.length;
     }
 
-    let q = (numberOfSteps - smo.timeInSystem.length - smo.rejected) / (numberOfSteps);
+    let q = (smo.timeInSystemRes.length - smo.timeInSystem.length - smo.rejected) / (smo.timeInSystemRes.length);
 
     if(smo.timeInSystemRes.length == 0 && smo.timeInSystem.length == 0){
         q = 0;
@@ -59,6 +68,9 @@ document.getElementById("ok").addEventListener("click", (ev => {
     result += `Относительная пропускная способность: ${q}<br/>`;
     result += `Абсолютная пропускная способность: ${A}<br/>`;
     result += `Среднее время заявок в системе: ${Wc}<br/>`;
+    result += `Kch1: ${kCh1}<br/>`;
+    result += `Kch2: ${kCh2}<br/>`;
+    result += `Kch3: ${kCh3}<br/>`;
     document.getElementById("result").innerHTML = result;
     console.log(smo.timeInSystemRes);
 }));
@@ -143,7 +155,7 @@ class SMO {
                     this.blocked++;
                 }else{
                     this.channel1 = 1;
-                    this.timeInSystem.push(0);
+                    this.timeInSystem.push(-1);
                 }
             }else{
                 
