@@ -20,6 +20,12 @@ document.getElementById("ok").addEventListener("click", (ev => {
     let kCh1 = 0;
     let kCh2 = 0;
     let kCh3 = 0;
+    let Pbz = 0;
+    let P2 = 0;
+    let P3 = 0;
+    let arr2 = [];
+    let arr3 = [];
+    let arrbz = [];
     for (let key in smo.stats) {
         if (smo.stats[key] !== 1) {
             result += `P${key} = ${smo.stats[key] / numberOfSteps}<br/>`;
@@ -40,11 +46,29 @@ document.getElementById("ok").addEventListener("click", (ev => {
             if(key[1] == 1){
                 kCh1 += smo.stats[key] / numberOfSteps;
             }
+
+            if(key[1] == 1 && (key[2] == 0 || key[3] == 0)){
+                Pbz += smo.stats[key] / numberOfSteps;
+                arrbz.push(key)
+            }
+
+            if(key[2] == 0 && key[1] == 1){
+                P2 += smo.stats[key] / numberOfSteps;
+                arr2.push(key)
+            }
+
+            if(key[2] != 0 && key[3] == 0 && key[1] == 1){
+                P3 += smo.stats[key] / numberOfSteps;
+                arr3.push(key)
+            }
         }
     }
     An2 *= (1 - pi2);
 	An3 *= (1 - pi3);
-	A = An2 + An3;
+    A = An2 + An3;
+    console.log(arr2);
+    console.log(arr3);
+    console.log(arrbz);
     let pBlock = smo.blocked / numberOfSteps;
     let pRej = smo.rejected / smo.timeInSystemRes.length;
 
@@ -55,6 +79,8 @@ document.getElementById("ok").addEventListener("click", (ev => {
 
         return {time: curr.time + prev.time};
     }, {time: 0}).time / smo.timeInSystemRes.length;
+
+    Wc = (1 / (1 - pi1)) + (1 / (1 - pi2)) * (P2 / Pbz) + (1 / (1 - pi3)) * (P3 / Pbz);
 
     let x = smo.timeInSystemRes.sort((a,b) => a.time - b.time);
 
@@ -75,7 +101,7 @@ document.getElementById("ok").addEventListener("click", (ev => {
     result += `Среднее количество заявок в системе: ${meanSystem}<br/>`;
     result += `Относительная пропускная способность: ${q}<br/>`;
     result += `Абсолютная пропускная способность: ${A}<br/>`;
-    result += `Среднее время заявок в системе: ${meanSystem / A}<br/>`;
+    result += `Среднее время заявок в системе: ${Wc}<br/>`;
     result += `Kch1: ${kCh1}<br/>`;
     result += `Kch2: ${kCh2}<br/>`;
     result += `Kch3: ${kCh3}<br/>`;
