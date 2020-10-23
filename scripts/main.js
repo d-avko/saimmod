@@ -80,20 +80,24 @@ document.getElementById("ok").addEventListener("click", (ev => {
         return {time: curr.time + prev.time};
     }, {time: 0}).time / smo.timeInSystemRes.length;
 
-    Wc = (1 / (1 - pi1)) + (1 / (1 - pi2)) * (P2 / Pbz) + (1 / (1 - pi3)) * (P3 / Pbz);
+    Wc = (1 / (1 - pi1)) +  checkIfNan(1 / (1 - pi2), smo.timeInSystemRes.length) * (P2 / Pbz) + checkIfNan(1 / (1 - pi3), smo.timeInSystemRes.length) * (P3 / Pbz);
 
     let x = smo.timeInSystemRes.sort((a,b) => a.time - b.time);
 
     console.log(x[smo.timeInSystemRes.length / 2])
 
-    if(isNaN(Wc)){
-        Wc = smo.timeInSystem.length;
-    }
-
     let q = (smo.timeInSystemRes.length - smo.timeInSystem.length - smo.rejected) / (smo.timeInSystemRes.length);
 
     if(smo.timeInSystemRes.length == 0 && smo.timeInSystem.length == 0){
         q = 0;
+    }
+
+    function checkIfNan(val, ret){
+        if(isNaN(val) || isFinite(val)){
+            return ret;
+        }
+
+        return val;
     }
 
     result += `Вероятность отказа: ${pRej}<br/>`;
