@@ -26,6 +26,8 @@ document.getElementById("ok").addEventListener("click", (ev => {
     let arr2 = [];
     let arr3 = [];
     let arrbz = [];
+    let x1 = 0;
+    let y1 = 0;
     for (let key in smo.stats) {
         if (smo.stats[key] !== 1) {
             result += `P${key} = ${smo.stats[key] / numberOfSteps}<br/>`;
@@ -61,6 +63,14 @@ document.getElementById("ok").addEventListener("click", (ev => {
                 P3 += smo.stats[key] / numberOfSteps;
                 arr3.push(key)
             }
+
+            if(key[2] == 1 && key[3] == 1 && key[1] == 1){
+                x1 += smo.stats[key] / numberOfSteps;
+            }
+
+            if(key[1] == 1){
+                y1 += smo.stats[key] / numberOfSteps;
+            }
         }
     }
     An2 *= (1 - pi2);
@@ -69,6 +79,7 @@ document.getElementById("ok").addEventListener("click", (ev => {
     console.log(arr2);
     console.log(arr3);
     console.log(arrbz);
+    console.log(`Potk ${pi2*pi3*(x1 / y1)}`)
     let pBlock = smo.blocked / numberOfSteps;
     let pRej = smo.rejected / smo.timeInSystemRes.length;
 
@@ -80,7 +91,13 @@ document.getElementById("ok").addEventListener("click", (ev => {
         return {time: curr.time + prev.time};
     }, {time: 0}).time / smo.timeInSystemRes.length;
 
-    Wc = (1 / (1 - pi1)) +  checkIfNan(1 / (1 - pi2), smo.timeInSystemRes.length) * (P2 / Pbz) + checkIfNan(1 / (1 - pi3), smo.timeInSystemRes.length) * (P3 / Pbz);
+    let pi2Part = 1 / (1 - pi2);
+    pi2Part *= An2 / (An2 + An3);
+
+    let pi3Part = 1 / (1 - pi3);
+    pi3Part *= An3 / (An2 + An3);
+
+    Wc = (1 / (1 - pi1)) +  checkIfNan(pi2Part, 0) + checkIfNan(pi3Part, 0);
 
     let x = smo.timeInSystemRes.sort((a,b) => a.time - b.time);
 
@@ -90,10 +107,10 @@ document.getElementById("ok").addEventListener("click", (ev => {
 
     if(smo.timeInSystemRes.length == 0 && smo.timeInSystem.length == 0){
         q = 0;
-    }
+    }   
 
     function checkIfNan(val, ret){
-        if(isNaN(val) || isFinite(val)){
+        if(isNaN(val) || !isFinite(val)){
             return ret;
         }
 
@@ -213,7 +230,7 @@ class SMO {
                     this.blocked++;
                 }else{
                     this.channel1 = 1;
-                    this.timeInSystem.push({time: -1, cameFrom: 's', cameTo: 'n1'});
+                    this.timeInSystem.push({time: 0, cameFrom: 's', cameTo: 'n1'});
                 }
             }else{
                 
