@@ -76,20 +76,22 @@ document.getElementById("ok").addEventListener("click", (ev => {
     An2 *= (1 - pi2);
 	An3 *= (1 - pi3);
     A = An2 + An3;
-    console.log(arr2);
-    console.log(arr3);
-    console.log(arrbz);
-    console.log(`Potk ${pi2*pi3*(x1 / y1)}`)
     let pBlock = smo.blocked / numberOfSteps;
     let pRej = smo.rejected / smo.timeInSystemRes.length;
 
-    let Wc = smo.timeInSystemRes.reduce((prev, curr, index) => {
-        if(prev == undefined || prev.time == undefined || curr == undefined || curr.time == undefined){
-            console.log(index);
-        }
+    if(isNaN(pRej)){
+        pRej = 0;
+    }
 
+    let Wc = smo.timeInSystemRes.reduce((prev, curr, index) => {
         return {time: curr.time + prev.time};
-    }, {time: 0}).time / smo.timeInSystemRes.length;
+    }, {time: 0}).time / (smo.timeInSystemRes.length);
+
+    if(isNaN(Wc)){
+        Wc = 0;
+    }
+
+    console.log(Wc);
 
     let pi2Part = 1 / (1 - pi2);
     pi2Part *= An2 / (An2 + An3);
@@ -97,7 +99,33 @@ document.getElementById("ok").addEventListener("click", (ev => {
     let pi3Part = 1 / (1 - pi3);
     pi3Part *= An3 / (An2 + An3);
 
-    Wc = (1 / (1 - pi1)) +  checkIfNan(pi2Part, 0) + checkIfNan(pi3Part, 0);
+    // let n1Sum = 0;
+    // let n2Sum = 0;
+    // let n3Sum = 0;
+    // smo.timeInSystemRes.forEach(item => {
+    //     switch(item.removedFrom){
+    //         case 'n1':{
+    //             n1Sum++;
+    //             break;
+    //         }
+    //         case 'n2':{
+    //             n2Sum++;
+    //             break;
+    //         }
+    //         case 'n3':{
+    //             n3Sum++;
+    //         }
+    //     }
+    // })
+
+    //console.log(n1Sum, n2Sum, n3Sum)
+
+    Wc = 1 / (1 - pi1) +  checkIfNan(pi2Part, 0) + checkIfNan(pi3Part, 0);
+
+    if(p == 1){
+        pBlock = 1;
+        Wc = 0;
+    }
 
     let x = smo.timeInSystemRes.sort((a,b) => a.time - b.time);
 
@@ -160,6 +188,9 @@ class Stat {
 }
 
 class SMO {
+    ch3Accepted = 0;
+    ch3Rej = 0;
+
     constructor(pi1, pi2, pi3, p) {
         this.pi1 = pi1;
         this.pi2 = pi2;
@@ -181,32 +212,40 @@ class SMO {
     processNextStep() {
         if(this.channel3 && (1 - this.pi3 > this.generator.next().value)){
             let searchArray = this.timeInSystem.map(x => x.cameTo);
-            let idx = searchArray.lastIndexOf('n3');
+            let idx = searchArray.indexOf('n3');
 
             this.channel3 = 0;
-            this.timeInSystemRes.push(this.timeInSystem.splice(idx,1)[0]);
+            let itemToRemove = this.timeInSystem.splice(idx,1)[0];
+            itemToRemove.removedFrom = 'n3';
+
+            this.timeInSystemRes.push(itemToRemove);
         }
 
         if(this.channel2 &&  (1 - this.pi2 > this.generator.next().value)){
             let searchArray = this.timeInSystem.map(x => x.cameTo);
-            let idx = searchArray.lastIndexOf('n2');
+            let idx = searchArray.indexOf('n2');
 
             this.channel2 = 0;
-            this.timeInSystemRes.push(this.timeInSystem.splice(idx,1)[0]);
+            let itemToRemove = this.timeInSystem.splice(idx,1)[0];
+            itemToRemove.removedFrom = 'n2';
+            this.timeInSystemRes.push(itemToRemove);
         }
 
         if(this.channel1 && (1 - this.pi1 > this.generator.next().value)){
             if(this.channel2 && this.channel3){
                 this.channel1 = 0;
 
-                let searchArray = this.timeInSystem.map(x => x.cameTo);
-                let idx = searchArray.lastIndexOf('n1');
+                let searchArray = this.timeInSystem.map(x => x.cameFrom);
+                let idx = searchArray.indexOf('s');
 
-                this.timeInSystemRes.push(this.timeInSystem.splice(idx, 1)[0]);
+                let itemToRemove = this.timeInSystem.splice(idx,1)[0];
+                itemToRemove.removedFrom = 'n1';
+
+                this.timeInSystemRes.push(itemToRemove);
                 this.rejected++;
             }else if(!this.channel2){
                 let searchArray = this.timeInSystem.map(x => x.cameFrom);
-                let idx = searchArray.lastIndexOf('s');
+                let idx = searchArray.indexOf('s');
                 this.timeInSystem[idx].cameFrom = 'n1';
                 this.timeInSystem[idx].cameTo = 'n2';
 
@@ -214,7 +253,7 @@ class SMO {
                 this.channel2 = 1;
             }else if (!this.channel3){
                 let searchArray = this.timeInSystem.map(x => x.cameFrom);
-                let idx = searchArray.lastIndexOf('s');
+                let idx = searchArray.indexOf('s');
                 this.timeInSystem[idx].cameFrom = 'n1';
                 this.timeInSystem[idx].cameTo = 'n3';
                 
