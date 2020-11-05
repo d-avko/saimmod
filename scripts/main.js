@@ -84,8 +84,12 @@ document.getElementById("ok").addEventListener("click", (ev => {
     }
 
     let Wc = smo.timeInSystemRes.reduce((prev, curr, index) => {
-        return {time: curr.time + prev.time};
-    }, {time: 0}).time / (smo.timeInSystemRes.length);
+        if(curr.cameTo !== 'n1'){
+            return {time: curr.time + prev.time};
+        }
+
+        return {time: prev.time};
+    }, {time: 0}).time / (smo.timeInSystemRes.length - smo.rejected);
 
     if(isNaN(Wc)){
         Wc = 0;
@@ -120,10 +124,11 @@ document.getElementById("ok").addEventListener("click", (ev => {
 
     //console.log(n1Sum, n2Sum, n3Sum)
 
-    Wc = 1 / (1 - pi1) +  checkIfNan(pi2Part, 0) + checkIfNan(pi3Part, 0);
+    let Wcform = 1 / (1 - pi1) +  checkIfNan(pi2Part, 0) + checkIfNan(pi3Part, 0);
 
     if(p == 1){
         pBlock = 1;
+        Wcform = 0;
         Wc = 0;
     }
 
@@ -150,7 +155,8 @@ document.getElementById("ok").addEventListener("click", (ev => {
     result += `Среднее количество заявок в системе: ${meanSystem}<br/>`;
     result += `Относительная пропускная способность: ${q}<br/>`;
     result += `Абсолютная пропускная способность: ${A}<br/>`;
-    result += `Среднее время заявок в системе: ${Wc}<br/>`;
+    result += `Среднее время заявок в системе по формуле: ${Wcform}<br/>`;
+    result += `Среднее время заявок в системе по среднему арифметическому: ${Wc}<br/>`;
     result += `Kch1: ${kCh1}<br/>`;
     result += `Kch2: ${kCh2}<br/>`;
     result += `Kch3: ${kCh3}<br/>`;
@@ -292,7 +298,7 @@ class SMO {
     }
 
     endProcessing(){
-        this.timeInSystemRes = this.timeInSystem.concat(this.timeInSystemRes);
+        //this.timeInSystemRes = this.timeInSystem.concat(this.timeInSystemRes);
     }
 
     saveStats() {
